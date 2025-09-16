@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from copy import deepcopy
+from copy import copy
 from typing import Literal
 
 class Yard:
@@ -33,7 +33,7 @@ class State:
     @staticmethod
     def from_state(state: State) -> State:
         new_state = State([])
-        new_state._data = deepcopy(state._data)
+        new_state._data = copy(state._data)
         return new_state
     
     def __repr__(self):
@@ -41,9 +41,6 @@ class State:
 
     def __eq__(self, other):
         return self._data == other._data
-
-    def is_contains_engine(self, track: int) -> bool:
-        return "*" in self._data[track]
 
     def is_track_empty(self, track: int) -> bool:
         return len(self._data[track]) == 0
