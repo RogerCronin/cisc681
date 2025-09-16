@@ -39,6 +39,9 @@ class State:
     def __repr__(self):
         return str(self._data)
 
+    def __eq__(self, other):
+        return self._data == other._data
+
     def is_contains_engine(self, track: int) -> bool:
         return "*" in self._data[track]
 
@@ -66,10 +69,10 @@ class Action:
     def __init__(self, type: Literal["l", "r"], connection: tuple[int, int]):
         self.type = type
         self.connection = connection
-    
+
     def __repr__(self):
         return f"Action({self.type}, {self.connection})"
-    
+
     def check_action(self, state: State) -> bool:
         connection = self.connection
 
@@ -105,3 +108,6 @@ def result(action: Action, state: State) -> State:
 # I love list comprehension
 def expand(state: State, yard: Yard) -> list[State]:
     return [result(action, state) for action in possible_actions(yard, state)]
+
+def expand_with_actions(state: State, yard: Yard) -> list[tuple[State, Action]]:
+    return [(result(action, state), action) for action in possible_actions(yard, state)]

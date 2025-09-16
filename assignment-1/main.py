@@ -3,22 +3,18 @@
 import tests
 
 def main():
-    """
-    yard_test = Yard([(1, 2)])
-    init_state_test = State([["a", "*", "b"], ["c", "d"]])
-    print(init_state_test)
-    left_state_test = left(yard_test, init_state_test, (1, 2))
-    print(left_state_test)
-    right_state_test = right(yard_test, init_state_test, (1, 2))
-    print(right_state_test)
-    """
+    print("Usage:")
+    print("  python main.py <test>")
+    print("  python main.py blind <yard>")
+    print("  python main.py heuristic <yard>")
+    print("  python main.py graph <yard>")
+    print()
+    print("Tests: test1, test2, test3")
+    print("Yards: yard1, yard2, yard3, yard4, yard5")
+    print()
+    print("Run with Python 3.13.7!")
 
-    """
-    print("Usage: python main.py {<file> | --test [1..7]}")
-    print("Note: Run this program with Python 3.13.7!")
-    """
-
-    tests.problem_3_tests()
+    #tests.problem_3_tests()
 
 if __name__ == "__main__":
     main()
