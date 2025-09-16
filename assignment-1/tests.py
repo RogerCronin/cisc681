@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from switch import Yard, State, Action, possible_actions, result, expand
+from switch import Yard, State, Action, possible_actions, result, expand, expand_with_actions
 from data import \
     yard_1, init_state_1, other_state_1, \
     yard_2, init_state_2, \
@@ -104,7 +104,26 @@ def problem_2_tests():
     assert left_5_3_state_expected == left_5_3_state
 
 def problem_3_tests():
-    print(other_state_1)
-    new_states = expand(other_state_1, yard_1)
-    for state in new_states:
-        print(state) # so they're all on new lines
+    print("Asserting expand check on OTHER-STATE-1...")
+    other_state_1_expansion_expected = [
+        State([[], ["e"], ["*"], ["b", "c", "a"], [], ["d"]]), # LEFT 5 3
+        State([[], ["e"], [], ["b", "c"], ["a", "*"], ["d"]]), # RIGHT 4 5
+        State([[], ["e"], [], ["b", "c", "a", "*"], [], ["d"]]), # LEFT 5 4
+        State([[], ["e"], [], ["b", "c", "a"], [], ["*", "d"]]), # RIGHT 5 6
+        State([[], ["e"], [], ["b", "c", "a"], ["*", "d"], []]) # LEFT 6 5
+    ]
+    other_state_1_expansion = expand(other_state_1, yard_1)
+    for state in other_state_1_expansion_expected: # can't use the set comparison thing since dicts are unhashable
+        assert state in other_state_1_expansion
+    
+    print("Asserting expand_with_actions on INIT-STATE-3...")
+    # [Action("r", (1, 2)), Action("r", (1, 3)), Action("l", (2, 1)), Action("l", (3, 1))]
+    init_state_3_expansion_expected = [
+        (State([[], ["*", "a"], ["b"]]), Action("r", (1, 2))), # RIGHT 1 2
+        (State([[], ["a"], ["*", "b"]]), Action("r", (1, 3))), # RIGHT 1 3
+        (State([["*", "a"], [], ["b"]]), Action("l", (2, 1))), # LEFT 2 1
+        (State([["*", "b"], ["a"], []]), Action("l", (3, 1))) # LEFT 3 1
+    ]
+    init_state_3_expansion = expand_with_actions(init_state_3, yard_3)
+    for state in init_state_3_expansion_expected:
+        assert state in init_state_3_expansion
