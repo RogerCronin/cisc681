@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from copy import copy
+from copy import deepcopy
 from typing import Literal
 
 class Yard:
@@ -14,7 +14,7 @@ class Yard:
             self._right_switches[track_1].add(track_2) # add arc track_1 -> track_2
             self._left_switches[track_2].add(track_1) # add arc track_2 <- track_1
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self._right_switches) + "\n" + str(self._left_switches)
 
     def get_all_right_connections(self, track: int) -> set[int]:
@@ -33,14 +33,17 @@ class State:
     @staticmethod
     def from_state(state: State) -> State:
         new_state = State([])
-        new_state._data = copy(state._data)
+        new_state._data = deepcopy(state._data)
         return new_state
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self._data)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self._data == other._data
+    
+    def __hash__(self) -> int:
+        return hash(self._data)
 
     def is_track_empty(self, track: int) -> bool:
         return len(self._data[track]) == 0
@@ -67,8 +70,14 @@ class Action:
         self.type = type
         self.connection = connection
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Action({self.type}, {self.connection})"
+    
+    def __eq__(self, other) -> bool:
+        return self.type == other.type and self.connection == other.connection
+
+    def __hash__(self) -> int:
+        return hash((self.type, self.connection))
 
     def check_action(self, state: State) -> bool:
         connection = self.connection
@@ -79,7 +88,7 @@ class Action:
 
         return True
 
-def possible_actions(yard: Yard, state: State) -> Action:
+def possible_actions(yard: Yard, state: State) -> list[Action]:
     engine_track = state.get_track_with_engine()
     all_right_connections = yard.get_all_right_connections(engine_track)
     all_left_connections = yard.get_all_left_connections(engine_track)

@@ -46,44 +46,62 @@ def base_tests():
 
 def problem_1_tests():
     print("Asserting possible_actions check on INIT-STATE-1...")
-
+    init_state_1_actions_expected = [Action("r", (1, 2)), Action("r", (1, 3)), Action("l", (2, 1))]
     init_state_1_actions = possible_actions(yard_1, init_state_1)
-    print(init_state_1_actions)
-
-    """
+    assert set(init_state_1_actions_expected) == set(init_state_1_actions)
+    print("Asserting possible_actions check on OTHER-STATE-1...")
+    other_state_1_actions_expected = [Action("l", (5, 3)), Action("r", (4, 5)), Action("l", (5, 4)), Action("r", (5, 6)), Action("l", (6, 5))]
     other_state_1_actions = possible_actions(yard_1, other_state_1)
-    print(other_state_1_actions)
+    assert set(other_state_1_actions_expected) == set(other_state_1_actions)
 
+    print("Asserting possible_actions check on INIT-STATE-2...")
+    init_state_2_actions_expected = [Action("r", (1, 2)), Action("l", (2, 1)), Action("r", (1, 5)), Action("l", (5, 1))]
     init_state_2_actions = possible_actions(yard_2, init_state_2)
-    print(init_state_2_actions)
+    assert set(init_state_2_actions_expected) == set(init_state_2_actions)
+    print("Asserting possible_actions check on NEXT-STATE-2...")
     next_state_2 = State([[], ["*", "d"], ["b"], ["a", "e"], ["c"]])
+    next_state_2_actions_expected = [Action("l", (2, 1)), Action("r", (2, 3)), Action("l", (3, 2)), Action("r", (2, 4)), Action("l", (4, 2))]
     next_state_2_actions = possible_actions(yard_2, next_state_2)
-    print(next_state_2_actions)
+    assert set(next_state_2_actions_expected) == set(next_state_2_actions)
 
+    print("Asserting possible_actions check on INIT-STATE-3...")
+    init_state_3_actions_expected = [Action("r", (1, 2)), Action("r", (1, 3)), Action("l", (2, 1)), Action("l", (3, 1))]
     init_state_3_actions = possible_actions(yard_3, init_state_3)
-    print(init_state_3_actions)
+    assert set(init_state_3_actions_expected) == set(init_state_3_actions)
+    print("Asserting possible_actions check on WEIRD-STATE-3...")
     weird_state_3 = State([["a", "b"], [], ["*"]])
+    weird_state_3_actions_expected = [Action("r", (1, 3)), Action("l", (3, 1))]
     weird_state_3_actions = possible_actions(yard_3, weird_state_3)
-    print(weird_state_3_actions)
-    """
+    assert set(weird_state_3_actions_expected) == set(weird_state_3_actions)
 
 def problem_2_tests():
-    print(init_state_1)
-
+    print("Asserting RIGHT 1 2 check on INIT-STATE-1...")
     right_1_2 = Action("r", (1, 2))
+    right_1_2_state_expected = State([[], ["*", "e"], [], ["b", "c", "a"], [], ["d"]])
     right_1_2_state = result(right_1_2, init_state_1)
-    print(right_1_2_state)
-
+    assert right_1_2_state_expected == right_1_2_state
+    print("Asserting LEFT 2 1 check on INIT-STATE-1...")
     left_2_1 = Action("l", (2, 1))
+    left_2_1_state_expected = State([["*", "e"], [], [], ["b", "c", "a"], [], ["d"]])
     left_2_1_state = result(left_2_1, init_state_1)
-    print(left_2_1_state)
+    assert left_2_1_state_expected == left_2_1_state
 
-    print(other_state_1)
-
-    print(result(Action("r", (4, 5)), other_state_1))
-    print(result(Action("l", (5, 4)), other_state_1))
-    print(result(Action("r", (5, 6)), other_state_1))
-    print(result(Action("l", (5, 3)), other_state_1))
+    print("Asserting RIGHT 4 5 check on OTHER-STATE-1...")
+    right_4_5_state_expected = State([[], ["e"], [], ["b", "c"], ["a", "*"], ["d"]])
+    right_4_5_state = result(Action("r", (4, 5)), other_state_1)
+    assert right_4_5_state_expected == right_4_5_state
+    print("Asserting LEFT 5 4 check on OTHER-STATE-1...")
+    left_5_4_state_expected = State([[], ["e"], [], ["b", "c", "a", "*"], [], ["d"]])
+    left_5_4_state = result(Action("l", (5, 4)), other_state_1)
+    assert left_5_4_state_expected == left_5_4_state
+    print("Asserting RIGHT 5 6 check on OTHER-STATE-1...")
+    right_5_6_state_expected = State([[], ["e"], [], ["b", "c", "a"], [], ["*", "d"]])
+    right_5_6_state = result(Action("r", (5, 6)), other_state_1)
+    assert right_5_6_state_expected == right_5_6_state
+    print("Asserting LEFT 5 3 check on OTHER-STATE-1...")
+    left_5_3_state_expected = State([[], ["e"], ["*"], ["b", "c", "a"], [], ["d"]])
+    left_5_3_state = result(Action("l", (5, 3)), other_state_1)
+    assert left_5_3_state_expected == left_5_3_state
 
 def problem_3_tests():
     print(other_state_1)
