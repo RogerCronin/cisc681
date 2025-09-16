@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from copy import deepcopy
 from typing import Literal
 
 class Yard:
@@ -33,7 +32,9 @@ class State:
     @staticmethod
     def from_state(state: State) -> State:
         new_state = State([])
-        new_state._data = deepcopy(state._data)
+        new_state._data = defaultdict(list)
+        for key, value in state._data.items():
+            new_state._data[key] = [x for x in value]
         return new_state
     
     def __repr__(self) -> str:

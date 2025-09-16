@@ -5,7 +5,7 @@ from collections.abc import Callable
 
 from switch import Yard, State, Action
 from tests import base_tests, problem_1_tests, problem_2_tests, problem_3_tests
-from search import blind_tree_search
+from search import blind_tree_search, heuristic_tree_search
 from data import \
     yard_1, init_state_1, goal_state_1, \
     yard_2, init_state_2, goal_state_2, \
@@ -70,7 +70,7 @@ def main():
         if args[0] == "blind":
             execute_search(blind_tree_search, args[1])
         elif args[0] == "heuristic":
-            ...
+            execute_search(heuristic_tree_search, args[1])
         elif args[0] == "graph":
             ...
     else:
