@@ -49,6 +49,15 @@ class State:
     def is_track_empty(self, track: int) -> bool:
         return len(self._data[track]) == 0
     
+    def count_number_of_cars(self) -> int:
+        cars = 0
+        for track in self._data:
+            cars += len(self._data[track])
+        return cars
+    
+    def number_of_cars_on_track(self, track: int) -> int:
+        return len(self._data[track])
+
     def perform_internal_action(self, action: Action):
         from_track = action.connection[0]
         to_track = action.connection[1]

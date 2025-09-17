@@ -26,8 +26,10 @@ def dfs(yard: Yard, initial_state: State, goal_state: State, depth_limit: int) -
     return None
 
 def dijkstras(yard: Yard, initial_state: State, goal_state: State, depth_limit: int) -> Node:
+    number_of_cars = initial_state.count_number_of_cars()
+
     def h(node: Node) -> int:
-        return 100 - len(node.state._data[1])
+        return number_of_cars - node.state.number_of_cars_on_track(1)
 
     class ComparisonNode(Node):
         def __lt__(self, other):
