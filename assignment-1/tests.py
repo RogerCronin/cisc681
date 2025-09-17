@@ -117,7 +117,6 @@ def problem_3_tests():
         assert state in other_state_1_expansion
     
     print("Asserting expand_with_actions on INIT-STATE-3...")
-    # [Action("r", (1, 2)), Action("r", (1, 3)), Action("l", (2, 1)), Action("l", (3, 1))]
     init_state_3_expansion_expected = [
         (State([[], ["*", "a"], ["b"]]), Action("r", (1, 2))), # RIGHT 1 2
         (State([[], ["a"], ["*", "b"]]), Action("r", (1, 3))), # RIGHT 1 3

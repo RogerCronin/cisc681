@@ -1,11 +1,11 @@
-# written for Python 3.13.7
+# written for Python 3.12.2
 
 import sys
 from collections.abc import Callable
 
 from switch import Yard, State, Action
 from tests import base_tests, problem_1_tests, problem_2_tests, problem_3_tests
-from search import blind_tree_search, heuristic_tree_search
+from search import blind_tree_search, heuristic_tree_search, heuristic_graph_search
 from data import \
     yard_1, init_state_1, goal_state_1, \
     yard_2, init_state_2, goal_state_2, \
@@ -24,7 +24,7 @@ def print_help():
     print("Yards: YARD-1, YARD-2, YARD-3, YARD-4, YARD-5")
     print()
     print("Please check the writeup.pdf attached with this assignment's Canvas submission.")
-    print("Run with Python 3.13.7!")
+    print("Run with Python 3.12.2 or greater!")
 
 def execute_search(search: Callable[[Yard, State, State], list[Action]], yard_name: str):
     match yard_name:
@@ -72,7 +72,7 @@ def main():
         elif args[0] == "heuristic":
             execute_search(heuristic_tree_search, args[1])
         elif args[0] == "graph":
-            ...
+            execute_search(heuristic_graph_search, args[1])
     else:
         print_help()
 

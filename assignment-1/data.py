@@ -1,5 +1,7 @@
 from switch import Yard, State
 
+# contains all of the yards and states defined in the assignment description
+
 yard_1 = Yard([(1, 2), (1, 3), (3, 5), (4, 5), (2, 6), (5, 6)])
 init_state_1 = State([["*"], ["e"], [], ["b", "c", "a"], [], ["d"]])
 goal_state_1 = State([["*", "a", "b", "c", "d", "e"], [], [], [], [], []])
