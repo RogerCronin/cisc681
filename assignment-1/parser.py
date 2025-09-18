@@ -10,18 +10,16 @@ from switch import Yard, State
 (define GOAL-STATE-5 '((* a b c d) empty empty empty))
 """
 
-YARD_PATTERN = r"\(define (.+) '\(((\(\d+ \d+\) ?)+)\)\)"
+YARD_CONNECTIONS_PATTERN = r"\((\d+) ?(\d)+\)"
+STATE_CARS_PATTERN = r"(?:\(((?:[\w*] ?)+)\))|(?:empty)"
 
 def parse_yard(yard_string: str) -> Yard | None:
-    matches = re.findall(YARD_PATTERN, yard_string)
-    print(matches)
-    if len(matches) != 2:
-        return None
-    connections_string = matches[1]
-    print(connections_string)
+    connectivity_list = list(map(lambda x: (int(x[0]), int(x[1])), re.findall(YARD_CONNECTIONS_PATTERN, yard_string)))
+    return Yard(connectivity_list)
 
 def parse_state(state_string: str) -> State:
-    ...
+    state = map(lambda x: [] if "" in x else x, map(lambda x: x.split(" "), re.findall(STATE_CARS_PATTERN, state_string)))
+    return State(state)
 
 def parse_file(file_name: str) -> tuple[Yard | None, State | None, State | None]:
     with open(file_name) as file:
