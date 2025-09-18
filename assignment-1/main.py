@@ -6,6 +6,7 @@ from collections.abc import Callable
 from switch import Yard, State, Action
 from tests import base_tests, problem_1_tests, problem_2_tests, problem_3_tests
 from search import blind_tree_search, heuristic_tree_search, heuristic_graph_search
+from parser import parse_file
 from data import \
     yard_1, init_state_1, goal_state_1, \
     yard_2, init_state_2, goal_state_2, \
@@ -16,12 +17,14 @@ from data import \
 def print_help():
     print("Usage:")
     print("  python main.py <test>")
-    print("  python main.py blind <yard>")
-    print("  python main.py heuristic <yard>")
-    print("  python main.py graph <yard>")
+    print("  python main.py blind <yard or file>")
+    print("  python main.py heuristic <yard or file>")
+    print("  python main.py graph <yard or file>")
     print()
     print("Tests: base, test1, test2, test3, full")
     print("Yards: YARD-1, YARD-2, YARD-3, YARD-4, YARD-5")
+    print("Files should be plaintext where the first three lines are LISP definitions of the yard, initial state, and goal state")
+    print("See example_yard.txt for reference")
     print()
     print("Please check the writeup.pdf attached with this assignment's Canvas submission.")
     print("Run with Python 3.12.2 or greater!")
@@ -39,8 +42,11 @@ def execute_search(search: Callable[[Yard, State, State], list[Action]], yard_na
         case "YARD-5" | "yard5" | "yard-5" | "yard_5":
             result = search(yard_5, init_state_5, goal_state_5)
         case _:
-            print_help()
-            return
+            yard, init_state, goal_state = parse_file(yard_name)
+            if not yard or not init_state or not goal_state:
+                print(f"Invalid file {yard_name}!")
+                return
+            result = search(yard, init_state, goal_state)
     
     print(result)
 
