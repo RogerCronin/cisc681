@@ -1,0 +1,3 @@
+(define YARD-5 '((1 2) (1 3) (1 4)))
+(define INIT-STATE-5 '((*) (a) (c b) (d))) ;Note c and b out of order
+(define GOAL-STATE-5 '((* a b c d) empty empty empty)) 

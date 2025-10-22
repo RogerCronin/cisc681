@@ -4,10 +4,10 @@ import sys
 from collections.abc import Callable
 
 from switch import Yard, State, Action
-from tests import base_tests, problem_1_tests, problem_2_tests, problem_3_tests
+from tests import base_tests, problem_1_tests, problem_2_tests, problem_3_tests, debug_tests
 from search import blind_tree_search, heuristic_tree_search, heuristic_graph_search
 from parser import parse_file
-from data import \
+from examples.data import \
     yard_1, init_state_1, goal_state_1, \
     yard_2, init_state_2, goal_state_2, \
     yard_3, init_state_3, goal_state_3, \
@@ -23,8 +23,8 @@ def print_help():
     print()
     print("Tests: base, test1, test2, test3, full")
     print("Yards: YARD-1, YARD-2, YARD-3, YARD-4, YARD-5")
-    print("Files should be plaintext where the first three lines are LISP definitions of the yard, initial state, and goal state")
-    print("See example_yard.txt for reference")
+    print("Files should be plaintext where the first three lines are Lisp definitions of the yard, initial state, and goal state.")
+    print("See examples directory for reference!")
     print()
     print("Please check the writeup.pdf attached with this assignment's Canvas submission.")
     print("Run with Python 3.12.2 or greater!")
@@ -68,6 +68,8 @@ def main():
             problem_1_tests()
             problem_2_tests()
             problem_3_tests()
+        elif args[0] == "debug": # shhhhh
+            debug_tests()
         else:
             print_help()
             return

@@ -40,16 +40,16 @@ def dfs(yard: Yard, initial_state: State, goal_state: State, depth_limit: int) -
             fringe.append(Node(state, node, action, node.depth + 1))
     return (None, nodes_expanded) # if we exhausted the fringe, we couldn't find a solution...
 
-# my heuristic is total number of cars - number of cars in the goal state
+# my heuristic is total number of cars - number of cars on the correct goal state track
 # this function generates a valid f(n) = g(n) + h(n) with... uh... monads?
-def f_factory(number_of_cars: int, end_track: int) -> Callable[[Node], int]:
-    return lambda node: node.depth + (number_of_cars - node.state.number_of_cars_on_track(end_track))
+# originally this was number of cars - number of cars on track 1 which is faster, but I think you might test on alternative end goals...
+def f_factory(goal_state: State) -> Callable[[Node], int]:
+    number_of_cars = goal_state.count_number_of_cars()
+    return lambda node: node.depth + (number_of_cars - State.number_of_cars_on_correct_track(node.state, goal_state))
 
 def dijkstras(yard: Yard, initial_state: State, goal_state: State) -> tuple[Node | None, int]:
     # make our f(n) cost function
-    number_of_cars = initial_state.count_number_of_cars()
-    end_track = goal_state.get_track_with_engine()
-    f = f_factory(number_of_cars, end_track)
+    f = f_factory(goal_state)
 
     # custom node that uses our f(n) as a comparator, needed for Python heapq
     class ComparisonNode(Node):
@@ -73,9 +73,7 @@ def dijkstras(yard: Yard, initial_state: State, goal_state: State) -> tuple[Node
 
 def graph_search(yard: Yard, initial_state: State, goal_state: State) -> tuple[Node | None, int]:
     # this is almost identical to dijkstras except we keep track of visited states with a set
-    number_of_cars = initial_state.count_number_of_cars()
-    end_track = goal_state.get_track_with_engine()
-    f = f_factory(number_of_cars, end_track)
+    f = f_factory(goal_state)
 
     class ComparisonNode(Node):
         def __lt__(self, other):
@@ -114,7 +112,7 @@ def blind_tree_search(yard: Yard, initial_state: State, goal_state: State, repor
         depth_limit += 1 # otherwise increase the depth by one and retry
     end_time = perf_counter()
     
-    print(f"Found a solution with {nodes_expanded} expansions taking {round(end_time - start_time, 3)} seconds!")
+    print(f"Found a solution with {nodes_expanded} expansions taking {round(end_time - start_time, 6)} seconds!")
     return backtrack_actions_through_tree(result)
 
 # I think heuristic_tree_search and heuristic_graph_search are pretty self explanatory, no?
@@ -127,7 +125,7 @@ def heuristic_tree_search(yard: Yard, initial_state: State, goal_state: State) -
     if not result:
         raise Exception("A* tree search failed to find a path")
     
-    print(f"Found a solution with {nodes_expanded} expansions taking {round(end_time - start_time, 3)} seconds!")
+    print(f"Found a solution with {nodes_expanded} expansions taking {round(end_time - start_time, 6)} seconds!")
     return backtrack_actions_through_tree(result)
 
 def heuristic_graph_search(yard: Yard, initial_state: State, goal_state: State) -> list[Action]:
@@ -138,5 +136,5 @@ def heuristic_graph_search(yard: Yard, initial_state: State, goal_state: State) 
     if not result:
         raise Exception("A* graph search failed to find a path")
 
-    print(f"Found a solution with {nodes_expaned} expansions taking {round(end_time - start_time, 3)} seconds!")
+    print(f"Found a solution with {nodes_expaned} expansions taking {round(end_time - start_time, 6)} seconds!")
     return backtrack_actions_through_tree(result)

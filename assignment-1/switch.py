@@ -64,6 +64,15 @@ class State:
     # returns the number of cars on a particular track
     def number_of_cars_on_track(self, track: int) -> int:
         return len(self._data[track])
+    
+    @staticmethod
+    def number_of_cars_on_correct_track(current_state: State, goal_state: State) -> int:
+        count = 0
+        for track in goal_state._data:
+            for car in goal_state._data[track]:
+                if car in current_state._data[track]:
+                    count += 1
+        return count
 
     # performs the provided Action, modifying the internal data structure
     # as opposed to, like, returning a new State or something

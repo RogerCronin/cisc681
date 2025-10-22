@@ -1,10 +1,10 @@
 from collections import defaultdict
 
 from switch import Yard, State, Action, possible_actions, result, expand, expand_with_actions
-from data import \
+from examples.data import \
     yard_1, init_state_1, other_state_1, \
     yard_2, init_state_2, \
-    yard_3, init_state_3
+    yard_3, init_state_3, goal_state_1
 
 def base_tests():
     test_yard_3 = Yard([(1, 2), (1, 3)])
@@ -126,3 +126,6 @@ def problem_3_tests():
     init_state_3_expansion = expand_with_actions(init_state_3, yard_3)
     for state in init_state_3_expansion_expected:
         assert state in init_state_3_expansion
+
+def debug_tests():
+    State.number_of_cars_on_correct_track(init_state_1, goal_state_1)

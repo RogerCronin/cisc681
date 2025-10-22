@@ -1,0 +1,3 @@
+(define YARD-4 '((1 2) (1 3) (1 4)))
+(define INIT-STATE-4 '((*) (a) (b c) (d)))
+(define GOAL-STATE-4 '((* a b c d) empty empty empty)) 
