@@ -1,10 +1,13 @@
 from collections import defaultdict
-from math import inf
 from random import choice, random
 from typing import Literal
 
 import gymnasium as gym
 from gymnasium.envs.toy_text.frozen_lake import generate_random_map
+
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+from matplotlib.patches import Polygon
 
 type Action = int
 type State = int
@@ -12,10 +15,11 @@ type Reward = float
 type Exploration = Literal["random"] | tuple[Literal["epsilon_greedy"], float] | Literal["state_counting"]
 
 SIZE = 4
-RENDER_TO_SCREEN = True
+RENDER_TO_SCREEN = False
+POSSIBLE_ACTIONS = [0, 1, 2, 3]
 
 class Agent:
-    epsilon_greedy_param = 0.05
+    epsilon_greedy_param = 0.1
 
     def __init__(self, possible_actions: list[Action], exploration: Exploration, alpha: float = 0.2, gamma: float = 0.9):
         self.alpha = alpha
@@ -67,23 +71,76 @@ class Agent:
 
         return choice(best_actions)
 
+    def print_q_table(self):
+        for row in range(SIZE):
+            for column in range(SIZE):
+                state = row * SIZE + column
+                for action in self.possible_actions:
+                    print(f"({state}, {action}): {self.q(state, action)}")
+
+    # this code is adapted from asking ChatGPT to draw an NxN grid where each cell is made of four direcitonal triangles
+    def show_q_table(self):
+        cmap = plt.colormaps["viridis"]
+        _, ax = plt.subplots(figsize = (6, 6))
+
+        q_values = [self.q(row * SIZE + column, action) for row in range(SIZE) for column in range(SIZE) for action in self.possible_actions]
+        q_min = min(q_values)
+        q_max = max(q_values)
+
+        for row in range(SIZE):
+            for column in range(SIZE):
+                s = row * SIZE + column
+
+                x0, y0 = column, 3 - row
+                cx, cy = x0 + 0.5, y0 + 0.5
+
+                triangles = {
+                    0: [(x0, y0), (x0, y0 + 1), (cx, cy)], # left
+                    1: [(x0, y0), (x0 + 1, y0), (cx, cy)], # down
+                    2: [(x0 + 1, y0), (x0 + 1, y0 + 1), (cx, cy)], # right
+                    3: [(x0, y0 + 1), (x0 + 1, y0 + 1), (cx, cy)] # up
+                }
+
+                for action in self.possible_actions:
+                    value = self.q(s, action)
+                    norm_value = (value - q_min) / (q_max - q_min) if q_max != q_min else 0.5
+                    color = cmap(norm_value)
+                    triangle = Polygon(triangles[action], color = color)
+                    ax.add_patch(triangle)
+        
+        ax.set_xlim(0, SIZE)
+        ax.set_ylim(0, SIZE)
+        ax.set_aspect("equal")
+        ax.axis("off")
+
+        sm = plt.cm.ScalarMappable(cmap = cmap, norm = colors.Normalize(vmin = q_min, vmax = q_max))
+        sm.set_array([])
+        plt.colorbar(sm, ax = ax, fraction = 0.046, pad = 0.04, label = "Q-Value")
+
+        plt.tight_layout()
+        plt.show()
+
 env = gym.make(
     "FrozenLake-v1",
     render_mode = "human" if RENDER_TO_SCREEN else None,
-    desc = generate_random_map(size = SIZE),
+    #desc = generate_random_map(size = SIZE),
+    map_name = "4x4",
     is_slippery = True,
     success_rate = 0.75,
     reward_schedule = (10, -10, 0)
 )
-agent = Agent([0, 1, 2, 3], ("epsilon_greedy", 0.05))
+agent = Agent(POSSIBLE_ACTIONS, ("epsilon_greedy", 0.05))
 
-s, info = env.reset(seed = 67)
-for _ in range(1000):
+s, info = env.reset()
+for _ in range(1_000_000):
     action = agent.act(s)
     prev_s = s
 
     s, r, terminated, truncated, info = env.step(action)
-    if terminated or truncated:
-        observation, info = env.reset()
+    agent.compute_q(prev_s, action, float(r), s)
 
+    if terminated or truncated:
+        s, info = env.reset()
+
+agent.show_q_table()
 env.close()
