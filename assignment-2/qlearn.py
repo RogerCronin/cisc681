@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, deque
 from random import choice, random
 
 import gymnasium as gym
@@ -16,6 +16,7 @@ type Utility = float
 type Exploration = tuple[str, float]
 type ConvergenceCriteria = tuple[str, float]
 
+DRAW_STATE_INDEX = True
 POSSIBLE_ACTIONS: list[Action] = [0, 1, 2, 3]
 
 class Agent:
@@ -111,10 +112,13 @@ class Agent:
     
     # find arg max over a of q(s, a)
     def pi(self, s: State) -> Action:
+        return choice(self._best_actions(s))
+    
+    def _best_actions(self, s: State) -> list[Action]:
         best_q_value = self._max_q_value(s)
         best_actions = [action for action in POSSIBLE_ACTIONS if self.q(s, action) == best_q_value]
 
-        return choice(best_actions)
+        return best_actions
     
     # returns the policy as a string
     def get_policy_representation(self) -> str:
@@ -125,7 +129,11 @@ class Agent:
             if s == "G":
                 policy.append("g")
             else:
-                policy.append(str(self.pi(i)))
+                best_actions = self._best_actions(i)
+                if len(best_actions) == 4:
+                    policy.append("?")
+                else:
+                    policy.append(str(self.pi(i)))
         return "".join(policy) # concat into a single string
 
     def show_q_table(self):
@@ -141,13 +149,13 @@ class Agent:
             for column in range(SIZE):
                 s = row * SIZE + column
                 x0, y0 = column, (SIZE - 1) - row
+                cx, cy = x0 + 0.5, y0 + 0.5 # center of cell
 
                 if self.state_representation[s] == 'H': # if hole, draw red square
                     ax.add_patch(Polygon([(x0, y0), (x0, y0 + 1), (x0 + 1, y0 + 1), (x0 + 1, y0)], facecolor = "red"))
                 elif self.state_representation[s] == 'G': # if goal, draw green square
                     ax.add_patch(Polygon([(x0, y0), (x0, y0 + 1), (x0 + 1, y0 + 1), (x0 + 1, y0)], facecolor = "green"))
                 else: # otherwise, draw q values
-                    cx, cy = x0 + 0.5, y0 + 0.5 # center of cell
                     triangles = {
                         0: [(x0, y0), (x0, y0 + 1), (cx, cy)], # left
                         1: [(x0, y0), (x0 + 1, y0), (cx, cy)], # down
@@ -166,6 +174,9 @@ class Agent:
                         else: # otherwise just draw normally
                             triangle = Polygon(triangles[action], facecolor = color)
                         ax.add_patch(triangle)
+                
+                if DRAW_STATE_INDEX:
+                    ax.text(cx, cy, str(s)) # draw state index
         
         ax.set_xlim(0, SIZE)
         ax.set_ylim(0, SIZE)
@@ -182,6 +193,9 @@ class Agent:
         plt.show()
 
 class LearningEnvironment:
+    episode_r = 0.0
+    rewards_queue_length = 50
+
     def __init__(self, agent: Agent, convergence_criteria: ConvergenceCriteria):
         self.agent = agent
         self.env = agent.environment
@@ -196,8 +210,16 @@ class LearningEnvironment:
             self.previous_v_values = [0.0] * len(self.agent.state_representation)
             self.v_delta_param = convergence_criteria[1]
             self.test_convergence = self._test_convergence_v_delta
+        elif convergence_criteria[0] == "level_off":
+            self.rewards_queue = deque(maxlen = self.rewards_queue_length)
+            self.level_off_param = convergence_criteria[1]
+            self.test_convergence = self._test_convergence_level_off
         else:
             raise ValueError("Invalid ConvergenceCriteria")
+
+    def compute_q(self, s: State, a: Action, r: Utility, s_prime: State) -> float:
+        self.episode_r = self.episode_r + 0.1 * r
+        return self.agent.compute_q(s, a, r, s_prime)
 
     def test_convergence(self):
         raise NotImplementedError("LearningEnvironment.test_convergence was not set, possibly invalid ConvergenceCriteria")
@@ -209,11 +231,16 @@ class LearningEnvironment:
         policy = self.agent.get_policy_representation()
 
         delta = 0
+        delta_states = []
         for s in range(len(self.agent.state_representation)):
             if policy[s] != self.previous_policy[s]:
+                delta_states.append(s)
                 delta += 1
         self.previous_policy = policy
         
+        if self.episode % 1_000 == 0:
+            print(f"policy_delta: {delta}")
+
         if delta == 0: # policy converged!
             self.converged_episodes += 1
             # iterate for another policy_delta_param episodes to ensure its really converged
@@ -224,9 +251,15 @@ class LearningEnvironment:
             return False
 
     def _test_convergence_v_delta(self):
+        if self.episode < 100 or not self.has_won:
+            return False
+
         v_values = [self.agent._average_q_value(s) for s in range(len(self.agent.state_representation))]
         v_deltas = [abs(x - y) for x, y in zip(v_values, self.previous_v_values)]
         self.previous_v_values = v_values
+
+        if self.episode % 1_000 == 0:
+            print(f"v_delta: {sum(v_deltas) / len(v_deltas)}")
 
         # check if every delta is below some epsilon
         for delta in v_deltas:
@@ -234,8 +267,25 @@ class LearningEnvironment:
                 return False
         return True
 
-    def learn(self):
-        episode = 0
+    def _test_convergence_level_off(self):
+        self.agent.alpha *= 0.9999
+        
+        self.rewards_queue.append(self.episode_r)
+        self.episode_r = 0.0
+
+        average_reward = sum(self.rewards_queue) / self.rewards_queue_length
+        reward_difference_of_squares = list(map(lambda x: (x - average_reward) ** 2, self.rewards_queue))
+        average_reward_difference_of_squares = sum(reward_difference_of_squares) / self.rewards_queue_length
+
+        print(f"Episode: {self.episode}")
+        print(f"Average: {average_reward_difference_of_squares}")
+        #print(self.agent.alpha)
+
+        return False
+
+    def learn(self, show_q_table = True):
+        self.has_won = False
+        self.episode = 0
         steps = 0
 
         s, _ = self.env.reset()
@@ -244,29 +294,37 @@ class LearningEnvironment:
             prev_s = s
 
             s, r, terminated, truncated, _ = self.env.step(a)
-            self.agent.compute_q(prev_s, a, float(r), s)
+            self.compute_q(prev_s, a, float(r), s)
             steps += 1
 
             if terminated or truncated:
+                self.agent.alpha *= 0.9999
+
+                if float(r) > 0:
+                    self.has_won = True
                 if self.test_convergence():
                     break
 
-                s, _ = self.env.reset()
-                episode += 1
-        
-        print(f"Converged after {episode} episodes taking {steps} steps")
-        self.agent.show_q_table()
+                if self.episode % 10_000 == 0:
+                    self.agent.show_q_table()
 
-SIZE = 4 # SIZE x SIZE map
+                s, _ = self.env.reset()
+                self.episode += 1
+        
+        print(f"Converged after {self.episode} episodes taking {steps} steps")
+        if show_q_table:
+            self.agent.show_q_table()
+
+SIZE = 8 # SIZE x SIZE map
 RENDER_TO_SCREEN = False
 
 env = gym.make(
     "FrozenLake-v1",
     render_mode = "human" if RENDER_TO_SCREEN else None,
     #desc = generate_random_map(size = SIZE), # randomly generates a map
-    map_name = "4x4", # remember to change SIZE = 4
-    #map_name = "8x8", # remember to change SIZE = 8
-    is_slippery = True,
+    #map_name = "4x4", # remember to change SIZE = 4
+    map_name = "8x8", # remember to change SIZE = 8
+    is_slippery = False,
     success_rate = 0.75,
     reward_schedule = (10, -10, 0)
 )
@@ -274,22 +332,20 @@ env = gym.make(
 """
 Exploration parameter values:
 ("epsilon_greedy", p) where p is the probability of taking a random action instead of following policy
-("state_counting", k) where k is the state counting parameter; k = 1 works fine (for whatever reason)
-("boltzmann", t) where t is the temperature; I never finished implementing this lol
+("state_counting", k) where k is the state counting parameter; k = 1 works ok (for whatever reason)
 """
 
 agent = Agent(env, ("epsilon_greedy", 0.1), alpha = 0.05, gamma = 0.9)
-#agent = Agent(env, ("state_counting", 1), alpha = 0.01, gamma = 0.9)
-#agent = Agent(env, ("boltzmann", 1), alpha = 0.01, gamma = 0.9)
+#agent = Agent(env, ("state_counting", 5), alpha = 0.05, gamma = 0.9)
 
 """
 ConvergenceCriteria parameter values:
 ("none", ...) doesn't check for criteria, instead taking the max number of steps every time
 ("policy_delta", n) checks for criteria if the policy doesn't change for at least n episodes; try n = 2
-("v_delta", e) checks if the difference between every V value between two consecutive runs is less than some epsilon
+("v_delta", e) checks if the difference between every average Q value between two consecutive runs is less than some epsilon
 """
 
 #learning_environment = LearningEnvironment(agent, ("none", 0))
-#learning_environment = LearningEnvironment(agent, ("policy_delta", 2))
-learning_environment = LearningEnvironment(agent, ("v_delta", 0.001))
-learning_environment.learn()
+learning_environment = LearningEnvironment(agent, ("policy_delta", 10))
+#learning_environment = LearningEnvironment(agent, ("v_delta", 0.0001))
+learning_environment.learn(True)
