@@ -319,13 +319,15 @@ def learn(
     agent = Agent(env, exploration, alpha, gamma)
     learning_environment = LearningEnvironment(agent, convergence_criteria)
 
-    return learning_environment.learn(True)
+    return learning_environment.learn(False)
 
 def main():
+    global SIZE, IS_SLIPPERY, RENDER_TO_SCREEN
+
     # modify these lines below
     # or "import learn from qlearn" from a different python file
-    SIZE = 4 # SIZE x SIZE map
-    IS_SLIPPERY = False
+    SIZE = 8 # SIZE x SIZE map
+    IS_SLIPPERY = True
     RENDER_TO_SCREEN = False
 
     env = gym.make(
@@ -345,11 +347,9 @@ def main():
     ("state_counting", k) where k is the state counting parameter; k = 1 works ok (for whatever reason)
     """
 
-    if IS_SLIPPERY:
-        agent = Agent(env, ("epsilon_greedy", 0.1), alpha = 0.05, gamma = 0.9)
-    else:
-        agent = Agent(env, ("state_counting", 1), alpha = 1, gamma = 0.9)
-
+    agent = Agent(env, ("epsilon_greedy", 0.1), alpha = 0.05, gamma = 0.9)
+    #agent = Agent(env, ("state_counting", 1), alpha = 0.05 if IS_SLIPPERY else 1, gamma = 0.9)
+        
     """
     ConvergenceCriteria parameter values:
     ("none", ...) doesn't check for criteria, instead taking the max number of steps every time
@@ -359,8 +359,8 @@ def main():
 
     #learning_environment = LearningEnvironment(agent, ("none", 0))
     learning_environment = LearningEnvironment(agent, ("policy_delta", 3))
-    #learning_environment = LearningEnvironment(agent, ("v_delta", 0.0001))
+    #learning_environment = LearningEnvironment(agent, ("v_delta", 0.0001)) # honestly just use policy_delta...
     learning_environment.learn(True)
 
 if __name__ == "__main__":
-    main()
+    main() # check out main to run this code by itself!
